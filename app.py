@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, url_for
 from ultralytics import YOLO
 import cv2
 import cv2.data
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
@@ -102,12 +103,15 @@ def index():
         if file.filename == "":
             return "Dosya seçmedin.", 400
 
+        # ✅ Dosya adını güvenli hale getir
+        filename = secure_filename(file.filename)
+
         # Dosyayı kaydet
-        save_path = os.path.join(app.config["UPLOAD_FOLDER"], file.filename)
+        save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
         file.save(save_path)
 
         # Orijinal görüntünün URL'i
-        original_url = url_for("static", filename=f"uploads/{file.filename}")
+        original_url = url_for("static", filename=f"uploads/{filename}")
 
         # YOLO analizi (tüm nesneler)
         annotated_name, all_detections = analyze_image(save_path)
@@ -123,18 +127,13 @@ def index():
             for cat in selected_categories:
                 allowed_labels.update(CATEGORY_MAP.get(cat, []))
 
-            detections = [
-                d for d in all_detections
-                if d["label"] in allowed_labels
-            ]
+            detections = [d for d in all_detections if d["label"] in allowed_labels]
         else:
-            # Filtre seçilmediyse, hepsini göster
             detections = all_detections
 
         # Yüz tespiti
         faces = detect_faces(save_path)
 
-    # HEM GET HEM POST durumunda burası çalışır
     return render_template(
         "index.html",
         original_url=original_url,
@@ -144,6 +143,8 @@ def index():
         selected_categories=selected_categories,
         all_detections_count=all_detections_count
     )
+
+
 
 
 
