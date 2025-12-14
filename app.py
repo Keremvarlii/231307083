@@ -4,8 +4,6 @@ from ultralytics import YOLO
 import cv2
 import cv2.data
 
-model = None
-
 app = Flask(__name__)
 
 # Yüklenen ve işlenen görsellerin tutulacağı klasör
@@ -14,7 +12,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # YOLO modelini yükle (extra large)
-model = YOLO("yolov8l.pt")
+model = None
 
 # OpenCV'nin hazır yüz algılayıcısı (Haar Cascade)
 face_cascade = cv2.CascadeClassifier(
@@ -35,21 +33,20 @@ def analyze_image(image_path: str):
     bounding box çizilmiş resmi kaydeder,
     nesne etiketlerini ve güven skorlarını döner.
     """
-    results = model(image_path)[0]  # tek resim
-
-    # YOLO'nun çizdiği görüntü (numpy array, BGR)
+    global model
+    if model is None:
+    model = YOLO("yolov8l.pt")
+    results = model(image_path)[0]  
     annotated_img = results.plot()
-
-    # Yeni dosya adı: orijinal_ismi_pred.uzanti
-    base_name = os.path.basename(image_path)      # ornek: resim.jpg
-    name, ext = os.path.splitext(base_name)       # name=resim, ext=.jpg
-    annotated_name = f"{name}_pred{ext}"          # resim_pred.jpg
+    base_name = os.path.basename(image_path)      
+    name, ext = os.path.splitext(base_name)       
+    annotated_name = f"{name}_pred{ext}"          
     annotated_path = os.path.join(UPLOAD_FOLDER, annotated_name)
 
-    # Annotated görüntüyü kaydet
+    
     cv2.imwrite(annotated_path, annotated_img)
 
-    # Tespit edilen nesneleri listele
+    
     detections = []
     for box in results.boxes:
         cls_id = int(box.cls[0])
@@ -148,9 +145,8 @@ def index():
     )
 
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+
+
 
 
 
