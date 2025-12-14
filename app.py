@@ -35,7 +35,7 @@ def analyze_image(image_path: str):
     """
     global model
     if model is None:
-        model = YOLO("yolov8l.pt")
+        model = YOLO("yolov8n.pt")
         
     results = model(image_path)[0]  
     annotated_img = results.plot()
@@ -144,6 +144,7 @@ def index():
         selected_categories=selected_categories,
         all_detections_count=all_detections_count
     )
+
 
 
 
