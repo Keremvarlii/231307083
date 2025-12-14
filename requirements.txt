@@ -2,4 +2,5 @@ flask
 gunicorn
 ultralytics
 opencv-python
-fer
+torch
+torchvision
